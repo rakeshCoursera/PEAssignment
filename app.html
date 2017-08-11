@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8">
+  <script src="https://unpkg.com/react@15/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.24.0/babel.js"></script>
+
+</head>
+
+<body>
+  <div id="root"></div>
+  <script type="text/babel">
+    const USER_ROLES = ['Patient','Doctor','Pharmacist'];
+    const TABLE_HEADER = ['Date', 'Perscription', 'Doctor Name', 'Patient Phone No.', 'Visible to Doctor', 'Visible to Pharmacist']
+    const PATIENT_DETAILS = [{
+      perscriptions:[{
+        date: '01/06/2017',
+        perscription: 'Ciprofloxacin 500 mg, 1 tab x7 days, 14 tabs',
+        doctorName: 'Dr. V. Kumar',
+        phone: '12345',
+        visibleToDoctor: false,
+        visibleToPharmacist: false,
+      }, 
+      {
+        date: '23/06/2017',
+        perscription: 'Metformin 500 mg, 1 tab po bid, #60 tabs, 2 refills',
+        doctorName: 'Dr. R.K. Sharma',
+        phone: '12045',
+        visibleToDoctor: true,
+        visibleToPharmacist: true,
+      },{
+        date: '15/06/2017',
+        perscription: 'Oxycodone 5 mg, 1-2 tab 4-6 hrs, 30 tabs',
+        doctorName: 'Dr. M Jangid',
+        phone: '12045',
+        visibleToDoctor: true,
+        visibleToPharmacist: false,
+      }, {
+        date: '07/07/2017',
+        perscription: 'Fentanyl patch 25 mcg/hr, 1 patch q3 days, 10 patches',
+        doctorName: 'Dr. M. Sutar',
+        phone: '12345',
+        visibleToDoctor: false,
+        visibleToPharmacist: true,
+      }]
+    }];
+
+    function PerscriptionTable(props){
+      // console.log(props);
+      const headers = props.header.map(function(val, index){
+        if(props.user !== 'Patient' && (val === 'Visible to Doctor' || val === 'Visible to Pharmacist') ){
+          return null;
+        }
+        return (<th key={index}>{val}</th>);
+      });
+
+      const rows = props.data.map(function(val, index){
+        if(props.user==='Patient'){
+          return(
+            <tr style={{"text-align": "center"}} >
+              <td>{val.date}</td>
+              <td>{val.perscription}</td>
+              <td>{val.doctorName}</td>
+              <td>{val.phone}</td>
+              <td>
+                <select value={val.visibleToDoctor} onChange={()=>props.handleDoctorVisiblityChange(!val.visibleToDoctor, index)}>
+                  <option>true</option>
+                  <option>false</option>
+                </select>
+              </td>
+              <td>
+                <select value={val.visibleToPharmacist} onChange={()=>props.handlePharmacistVisiblityChange(!val.visibleToPharmacist, index)}>
+                  <option>true</option>
+                  <option>false</option>
+                </select>
+              </td>
+            </tr>  
+          );
+        } else {
+          if(val.visibleToDoctor && props.user ==='Doctor' || val.visibleToPharmacist && props.user ==='Pharmacist'){
+            return(
+              <tr style={{"text-align": "center"}} >
+                <td>{val.date}</td>
+                <td>{val.perscription}</td>
+                <td>{val.doctorName}</td>
+                <td>{val.phone}</td>
+              </tr>
+            );
+          } else {
+            return null;
+          }
+        }
+      });
+
+      const doctorTableArray = props.data.filter((val)=>val.visibleToDoctor);
+      const pharmacistTableArray = props.data.filter((val)=>val.visibleToPharmacist);
+
+      if(props.user === 'Pharmacist' && pharmacistTableArray < 1){
+        return <h3 style={{color:'red'}}>Hey Pharmacist, Patient has not given you the access to see his/her medical details.</h3>;
+      } else if (props.user === 'Doctor' && doctorTableArray.length < 1) {
+        return <h3 style={{color:'red'}}>Hey Doctor, Patient has not given you the access to see his/her medical details.</h3>;
+      } 
+      return(
+        <table style={{width:"100%"}}>
+          <tr style={{"text-align": "center"}}>
+            {headers}
+          </tr>
+          {rows}
+        </table>
+      );      
+    }
+
+    class PharmEasy extends React.Component{
+      constructor(props){
+        super(props);
+        this.state = {
+          currentRole: '',
+          perscriptionDetails: [],
+        };
+      }
+
+      componentWillMount(){
+        this.setState({
+          currentRole: USER_ROLES[0],
+          perscriptionDetails: getDateSortData(PATIENT_DETAILS[0])
+        });
+
+        function getDateSortData(data){
+          console.log(typeof data.perscriptions);
+          const newData =  data.perscriptions.sort(function(a, b){
+            console.log(a.date,b.date)
+            return new Date(a.date) - new Date(b.date);
+          });
+
+          console.log('Rakesh', newData)
+        };
+      }
+
+      
+
+      handleSelectChange(event){
+        this.setState({currentRole: event.target.value});
+      }
+
+      handleDoctorVisiblityChange(val, index){
+        const item = this.state.perscriptionDetails;
+        item[index].visibleToDoctor = val;
+        this.setState({perscriptionDetails: item}, () => {
+          console.log('handleDoctorVisiblityChange: ', this.state.perscriptionDetails[index].visibleToDoctor);
+        });
+      }
+
+      handlePharmacistVisiblityChange(val, index){
+        const item = this.state.perscriptionDetails;
+        item[index].visibleToPharmacist = val;
+        this.setState({perscriptionDetails: item },()=>{
+          console.log('handlePharmacistVisiblityChange: ', this.state.perscriptionDetails[index].visibleToPharmacist);
+        });
+      }
+
+      render(){
+        console.log(this.state.currentRole, this.state.perscriptionDetails);
+        const options = USER_ROLES.map((val, index) => <option key={index}>{val}</option>);
+        return (
+          <div>
+            <strong> Select Role: &nbsp;</strong>
+            <select style = {{width:205, height:32}} value={this.state.currentRole} onChange={this.handleSelectChange.bind(this)}>
+              {options}
+            </select><br/><br/>
+            <PerscriptionTable 
+              header={TABLE_HEADER} 
+              user={this.state.currentRole}
+              data={this.state.perscriptionDetails}
+              handleDoctorVisiblityChange={this.handleDoctorVisiblityChange.bind(this)}
+              handlePharmacistVisiblityChange={this.handlePharmacistVisiblityChange.bind(this)}
+            />
+          </div>
+        );
+      }
+    }
+    ReactDOM.render(
+      <PharmEasy/>,
+      document.getElementById('root')
+    )
+  </script>
+</body>
+
+</html>
