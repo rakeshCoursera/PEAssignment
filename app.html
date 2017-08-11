@@ -3,14 +3,42 @@
 
 <head>
   <meta charset="UTF-8">
-  <script src="https://unpkg.com/react@15/dist/react.min.js"></script>
-  <script src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.24.0/babel.js"></script>
+  <title>PharmEasy</title>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  <script type="text/javascript" src="https://unpkg.com/react@15/dist/react.min.js"></script>
+  <script type="text/javascript" src="https://unpkg.com/react-dom@15/dist/react-dom.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.24.0/babel.js"></script>
+  <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+  <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+  <style> 
+    body {
+      padding: 60px 0px 0px 0px;
+      font-size: 16px;
+    }
 
+  </style>
 </head>
 
 <body>
-  <div id="root"></div>
+  <nav class="navbar navbar-inverse navbar-collapse navbar-fixed-top">
+    <div class="container">
+      <div class="navbar-header">
+        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+          <span class="icon-bar"></span>
+          <span class="icon-bar"></span>
+        </button>
+        <a class="navbar-brand" href="#">PharmEasy</a>
+      </div>
+      <div class="collapse navbar-collapse" id="myNavbar">
+        <ul class="nav navbar-nav navbar-right" id="nav">
+          <li></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  <div class="container">
+    <div id="root"></div>
+  </div>
   <script type="text/babel">
     const USER_ROLES = ['Patient','Doctor','Pharmacist'];
     const TABLE_HEADER = ['Date', 'Perscription', 'Doctor Name', 'Patient Phone No.', 'Visible to Doctor', 'Visible to Pharmacist']
@@ -59,7 +87,7 @@
       const rows = props.data.map(function(val, index){
         if(props.user==='Patient'){
           return(
-            <tr style={{"text-align": "center"}} >
+            <tr>
               <td>{val.date}</td>
               <td>{val.perscription}</td>
               <td>{val.doctorName}</td>
@@ -81,7 +109,7 @@
         } else {
           if(val.visibleToDoctor && props.user ==='Doctor' || val.visibleToPharmacist && props.user ==='Pharmacist'){
             return(
-              <tr style={{"text-align": "center"}} >
+              <tr>
                 <td>{val.date}</td>
                 <td>{val.perscription}</td>
                 <td>{val.doctorName}</td>
@@ -103,11 +131,15 @@
         return <h3 style={{color:'red'}}>Hey Doctor, Patient has not given you the access to see his/her medical details.</h3>;
       } 
       return(
-        <table style={{width:"100%"}}>
-          <tr style={{"text-align": "center"}}>
-            {headers}
-          </tr>
-          {rows}
+        <table className="table table-responsive table-striped table-hover">
+          <thead>
+            <tr>
+              {headers}
+            </tr>
+          </thead>
+          <tbody>
+            {rows}
+          </tbody>
         </table>
       );      
     }
@@ -124,23 +156,11 @@
       componentWillMount(){
         this.setState({
           currentRole: USER_ROLES[0],
-          perscriptionDetails: getDateSortData(PATIENT_DETAILS[0])
+          perscriptionDetails: PATIENT_DETAILS[0].perscriptions
         });
-
-        function getDateSortData(data){
-          console.log(typeof data.perscriptions);
-          const newData =  data.perscriptions.sort(function(a, b){
-            console.log(a.date,b.date)
-            return new Date(a.date) - new Date(b.date);
-          });
-
-          console.log('Rakesh', newData)
-        };
       }
 
-      
-
-      handleSelectChange(event){
+     handleSelectChange(event){
         this.setState({currentRole: event.target.value});
       }
 
@@ -165,17 +185,21 @@
         const options = USER_ROLES.map((val, index) => <option key={index}>{val}</option>);
         return (
           <div>
-            <strong> Select Role: &nbsp;</strong>
-            <select style = {{width:205, height:32}} value={this.state.currentRole} onChange={this.handleSelectChange.bind(this)}>
-              {options}
-            </select><br/><br/>
-            <PerscriptionTable 
-              header={TABLE_HEADER} 
-              user={this.state.currentRole}
-              data={this.state.perscriptionDetails}
-              handleDoctorVisiblityChange={this.handleDoctorVisiblityChange.bind(this)}
-              handlePharmacistVisiblityChange={this.handlePharmacistVisiblityChange.bind(this)}
-            />
+            <div className="form-group">
+              <label>Select Role:</label>
+              <select className="form-control" value={this.state.currentRole} onChange={this.handleSelectChange.bind(this)}>
+                {options}
+              </select><br/>
+            </div>
+            <div>
+              <PerscriptionTable 
+                header={TABLE_HEADER} 
+                user={this.state.currentRole}
+                data={this.state.perscriptionDetails}
+                handleDoctorVisiblityChange={this.handleDoctorVisiblityChange.bind(this)}
+                handlePharmacistVisiblityChange={this.handlePharmacistVisiblityChange.bind(this)}
+              />
+            </div>
           </div>
         );
       }
